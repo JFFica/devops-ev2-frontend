@@ -1,122 +1,166 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "./App.css";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [projects, setProjects] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+
+  const [projectName, setProjectName] = useState("");
+  const [resourceName, setResourceName] = useState("");
+
+  const loadData = async () => {
+    try {
+      const projectsResponse = await axios.get(`${API_URL}/api/projects`);
+      const resourcesResponse = await axios.get(`${API_URL}/api/resources`);
+      const analyticsResponse = await axios.get(`${API_URL}/api/analytics/summary`);
+
+      setProjects(projectsResponse.data);
+      setResources(resourcesResponse.data);
+      setAnalytics(analyticsResponse.data);
+    } catch (error) {
+      console.error("Error al cargar datos:", error);
+    }
+  };
+
+  const createProject = async () => {
+    if (!projectName.trim()) return;
+
+    await axios.post(`${API_URL}/api/projects`, {
+      name: projectName,
+      status: "Activo",
+    });
+
+    setProjectName("");
+    loadData();
+  };
+
+  const deleteProject = async (id) => {
+    await axios.delete(`${API_URL}/api/projects/${id}`);
+    loadData();
+  };
+
+  const createResource = async () => {
+    if (!resourceName.trim()) return;
+
+    await axios.post(`${API_URL}/api/resources`, {
+      name: resourceName,
+      role: "Desarrollador",
+    });
+
+    setResourceName("");
+    loadData();
+  };
+
+  const deleteResource = async (id) => {
+    await axios.delete(`${API_URL}/api/resources/${id}`);
+    loadData();
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="app">
+      <section className="hero">
         <div>
-          <h1>Get started</h1>
+          <p className="tag">Innovatech Chile</p>
+          <h1>Panel de Gestión DevOps</h1>
           <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+            Plataforma contenerizada para gestionar proyectos, recursos humanos
+            y visualizar indicadores generales del sistema.
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className="status-card">
+          <span>Estado del sistema</span>
+          <strong>Operativo</strong>
+          <small>Frontend preparado para consumir API Gateway / Backend</small>
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <section className="grid analytics-grid">
+        <div className="card">
+          <span>Proyectos</span>
+          <strong>{analytics?.totalProjects ?? projects.length}</strong>
+        </div>
+
+        <div className="card">
+          <span>Recursos humanos</span>
+          <strong>{analytics?.totalResources ?? resources.length}</strong>
+        </div>
+
+        <div className="card">
+          <span>Estado general</span>
+          <strong>{analytics?.systemStatus ?? "Activo"}</strong>
+        </div>
+      </section>
+
+      <section className="grid">
+        <div className="panel">
+          <h2>Gestión de proyectos</h2>
+          <p>Crear, visualizar y eliminar proyectos de Innovatech.</p>
+
+          <div className="form">
+            <input
+              type="text"
+              placeholder="Nombre del proyecto"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
+            <button onClick={createProject}>Crear proyecto</button>
+          </div>
+
+          <div className="list">
+            {projects.map((project) => (
+              <div className="item" key={project.id}>
+                <div>
+                  <strong>{project.name}</strong>
+                  <span>{project.status}</span>
+                </div>
+                <button className="danger" onClick={() => deleteProject(project.id)}>
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Gestión de recursos</h2>
+          <p>Registrar, visualizar y eliminar recursos humanos.</p>
+
+          <div className="form">
+            <input
+              type="text"
+              placeholder="Nombre del recurso"
+              value={resourceName}
+              onChange={(e) => setResourceName(e.target.value)}
+            />
+            <button onClick={createResource}>Crear recurso</button>
+          </div>
+
+          <div className="list">
+            {resources.map((resource) => (
+              <div className="item" key={resource.id}>
+                <div>
+                  <strong>{resource.name}</strong>
+                  <span>{resource.role}</span>
+                </div>
+                <button className="danger" onClick={() => deleteResource(resource.id)}>
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }
 
-export default App
+export default App;
