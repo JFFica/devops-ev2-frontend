@@ -1,0 +1,9 @@
+services:
+  innovatech-frontend:
+    build: .
+    container_name: innovatech-frontend
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    restart: always
